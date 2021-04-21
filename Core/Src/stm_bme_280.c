@@ -56,7 +56,7 @@ static void I2Cx_ReadData24(uint16_t Addr, uint8_t Reg, uint32_t *Value)
   HAL_StatusTypeDef status = HAL_ERROR;
 //  status = HAL_I2C_Mem_Read_IT(&hi2c3, Addr, Reg, I2C_MEMADD_SIZE_8BIT, (uint8_t*)Value, 3);
 //  status = HAL_I2C_Master_Receive_IT(&hi2c3, Addr, (uint8_t*)Value, 3);
-
+//  status = HAL_I2C_Mem_Read_DMA(&hi2c3, Addr, Reg, I2C_MEMADD_SIZE_8BIT, (uint8_t*)Value, 3);
   status = HAL_I2C_Mem_Read(&hi2c3, Addr, Reg, I2C_MEMADD_SIZE_8BIT, (uint8_t*)Value, 3, 0x10000);
   if(status != HAL_OK)
   {
@@ -139,7 +139,7 @@ float BME280_ReadTemperature(void)
 	}
 
 	readRawData >>= 4;
-
+//
 	int32_t tmp_1 = ((((readRawData>>3) - ((int32_t)CalibData.tempValue.dig_T1 <<1))) *
 		((int32_t)CalibData.tempValue.dig_T2)) >> 11;
 
@@ -147,8 +147,10 @@ float BME280_ReadTemperature(void)
 		((readRawData>>4) - ((int32_t)CalibData.tempValue.dig_T1))) >> 12) *
 		((int32_t)CalibData.tempValue.dig_T3)) >> 14;
 
+//	int32_t tmp_2 = 0;
 	tFineValue = tmp_1 + tmp_2;
 	readTemp = ((tFineValue * 5 + 128) >> 8);
+
 	readTemp /= 100.0f;
 
 	return readTemp;

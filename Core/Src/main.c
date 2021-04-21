@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
@@ -27,6 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm_bme_280.h"
+//#include "lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,12 +53,14 @@ uint16_t dl_kom;
 uint8_t received[2];
 uint8_t komunikat[50];
 BME280_ReadedData_t BME280_Data;
+
+//struct lcd_disp disp;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -92,19 +96,25 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C3_Init();
   MX_USART2_UART_Init();
   MX_TIM7_Init();
   MX_USART1_UART_Init();
   MX_TIM10_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-
-	BME280_Initial(BME280_STANDBY_MS_1000, BME280_FILTER_X4,
-			BME280_TEMP_OVERSAMPLING_X4, BME280_PRES_OVERSAMPLING_X2,
-			BME280_HUM_OVERSAMPLING_X1, BME280_MODE_NORMAL);
-
+  BME280_mode_E sensMode = BME280_MODE_SLEEP;
+  BME280_Initial(BME280_STANDBY_MS_1000, BME280_FILTER_OFF, BME280_TEMP_OVERSAMPLING_X1, BME280_PRES_OVERSAMPLING_X1, BME280_HUM_OVERSAMPLING_X1, BME280_MODE_NORMAL);
 	HAL_TIM_Base_Start_IT(&htim7);
-//	HAL_UART_Receive_IT(&huart2, &received, 2);
+//	disp.addr = (0x3F << 1);
+//	disp.bl = true;
+//	lcd_init(&disp);
+//	sprintf((char *)disp.f_line, "To 1. linia");
+//	sprintf((char *)disp.s_line, "a to druga linia");
+//	lcd_display(&disp);
+	HAL_UART_Receive_IT(&huart1, &received, 2);
+	HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -173,9 +183,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		BME280_Data.humi = BME280_ReadHumidity();
 		BME280_Data.alti = BME280_ReadAltitude(kSEA_LEVEL_PRESURE_PA);
 
-//		dl_kom = sprintf(komunikat, "T: %f, P: %f, H: %f, A: %f\r\n",	BME280_Data.temp, BME280_Data.pres, BME280_Data.humi,				BME280_Data.alti);
-		printf("T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f \r\n", BME280_Data.temp, BME280_Data.pres, BME280_Data.humi, BME280_Data.alti);
-//		HAL_UART_Transmit(&huart1, komunikat, dl_kom, 100);
+		dl_kom = sprintf(komunikat, "T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f\r\n",	BME280_Data.temp, BME280_Data.pres, BME280_Data.humi,BME280_Data.alti);
+//		printf("T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f \r\n", BME280_Data.temp, BME280_Data.pres, BME280_Data.humi, BME280_Data.alti);
+		HAL_UART_Transmit_IT(&huart1, komunikat, dl_kom);
 	}
 }
 
@@ -209,9 +219,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 //			BME280_Data.humi = BME280_ReadHumidity();
 //			BME280_Data.alti = BME280_ReadAltitude(kSEA_LEVEL_PRESURE_PA);
 //
-//			dl_kom = sprintf(komunikat, "T: %f, P: %f, H: %f, A: %f\n",BME280_Data.temp, BME280_Data.pres, BME280_Data.humi,BME280_Data.alti);
+//			dl_kom = sprintf(komunikat, "T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f\r\n",BME280_Data.temp, BME280_Data.pres, BME280_Data.humi,BME280_Data.alti);
 ////			printf("T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f \r\n", BME280_Data.temp, BME280_Data.pres, BME280_Data.humi, BME280_Data.alti);
-//			//		HAL_UART_Transmit_IT(&huart1, komunikat, dl_kom);
+//			HAL_UART_Transmit(&huart1, komunikat, dl_kom,100);
 //		}
 		else if (strchr(received, 'd') != NULL)
 		{
@@ -237,11 +247,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 			HAL_GPIO_TogglePin(GPIOG, LD3_Pin);
 			dl_kom = sprintf("%d", &received[1]);
-			HAL_UART_Transmit_IT(&huart2, &received[1], dl_kom);
+//			HAL_UART_Transmit_IT(&huart1, &received[1], dl_kom);
 		}
 
 
-		HAL_UART_Receive_IT(&huart2, &received, 2);
+		HAL_UART_Receive_IT(&huart1, &received, 2);
 //		HAL_UART_Transmit_IT(&huart1, &komunikat, dl_kom);
 
 	}
@@ -249,17 +259,25 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 //void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 //	if (GPIO_Pin == GPIO_PIN_0) {
+//		HAL_GPIO_TogglePin(GPIOG, LD3_Pin);
+////		BME280_mode_E sensMode = BME280_MODE_FORCED_1;
+////		BME280_Initial(BME280_STANDBY_MS_1000, BME280_FILTER_OFF, BME280_TEMP_OVERSAMPLING_X1, BME280_PRES_OVERSAMPLING_X1, BME280_HUM_OVERSAMPLING_X1, BME280_MODE_FORCED_1);
+//
 //		BME280_Data.temp = BME280_ReadTemperature();
 //		BME280_Data.pres = BME280_ReadPressure();
 //		BME280_Data.humi = BME280_ReadHumidity();
 //		BME280_Data.alti = BME280_ReadAltitude(kSEA_LEVEL_PRESURE_PA);
 //
-//		dl_kom = sprintf(komunikat, "T: %f, P: %f, H: %f, A: %f\r\n",
+//		dl_kom = sprintf(komunikat, "T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f\r\n",
 //				BME280_Data.temp, BME280_Data.pres, BME280_Data.humi,
 //				BME280_Data.alti);
 ////		printf("T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f \r\n", BME280_Data.temp,
 ////				BME280_Data.pres, BME280_Data.humi, BME280_Data.alti);
-//		HAL_UART_Transmit_IT(&huart1, komunikat, dl_kom);
+////		HAL_UART_Transmit_IT(&huart1, komunikat, dl_kom);
+//		HAL_UART_Transmit(&huart1, komunikat, dl_kom, 100);
+//
+////		sprintf((char*) disp.f_line, "Siemano");
+////		lcd_display(&disp);
 //	}
 //}
 
