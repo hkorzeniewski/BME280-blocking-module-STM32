@@ -104,7 +104,7 @@ int main(void)
   MX_TIM10_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  BME280_mode_E sensMode = BME280_MODE_SLEEP;
+
   BME280_Initial(BME280_STANDBY_MS_1000, BME280_FILTER_OFF, BME280_TEMP_OVERSAMPLING_X1, BME280_PRES_OVERSAMPLING_X1, BME280_HUM_OVERSAMPLING_X1, BME280_MODE_NORMAL);
 	HAL_TIM_Base_Start_IT(&htim7);
 //	disp.addr = (0x3F << 1);
@@ -151,8 +151,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 50;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
+  RCC_OscInitStruct.PLL.PLLN = 72;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -164,10 +164,10 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV8;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -228,10 +228,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			switch(received[1])
 			{
 			case 48:
-				__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
+//				__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
+				TIM10->CCR1 = 0;
 				break;
 			case 49:
-				__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 50);
+//				__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 50);
+				TIM10->CCR1 = 50;
 				break;
 			case 50:
 				__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 100);
@@ -240,7 +242,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 150);
 				break;
 			case 52:
-				__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 200);
+//				__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 200);
+				TIM10->CCR1 = 200;
 				break;
 			}
 
