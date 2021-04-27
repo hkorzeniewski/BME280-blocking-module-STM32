@@ -77,13 +77,13 @@ uint16_t pres, temp, humi, alti;
 uint16_t dl_kom;
 uint8_t received[2];
 uint8_t komunikat[50];
-BME280_ReadedData_t BME280_Data;
 uint16_t correct[4] = { 1, 1, 1, 1 };
 uint8_t znak[1];
 uint16_t pin[4];
 uint8_t pin_counter = 0;
 uint16_t message[6];
 int ALLOW_FLAG = 0;
+BME280_ReadedData_t BME280_Data;
 //struct lcd_disp disp;
 /* USER CODE END PV */
 
@@ -160,7 +160,6 @@ int main(void)
 			HAL_GPIO_WritePin(GPIOG, LD3_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(GPIOG, LD4_Pin, GPIO_PIN_RESET);
 			ALLOW_FLAG = 1;
-			//		 memset(pin, 0, sizeof pin);
 		} else if (checkPin(correct, 4) == 0) {
 			HAL_GPIO_WritePin(GPIOG, LD3_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOG, LD4_Pin, GPIO_PIN_SET);
@@ -239,45 +238,55 @@ int checkPin(int a[], int n) {
 		if (gu8_KeyStatesArr[KEY_1] == KEY_PRESSED) {
 			//			HAL_GPIO_TogglePin(GPIOG, LD3_Pin);
 			HAL_Delay(200);
-			sprintf(znak, "1\r\n");
+			sprintf(znak, "1");
 			//		HAL_UART_Transmit(&huart1, znak, 3, 100);
 			HAL_UART_Transmit_IT(&huart1, &znak, 1);
 			pin[pin_counter] = 1;
 			pin_counter++;
 		} else if (gu8_KeyStatesArr[KEY_2] == KEY_PRESSED) {
 			//			HAL_GPIO_TogglePin(GPIOG, LD4_Pin);
-			sprintf(znak, "2\r\n");
-			//		HAL_UART_Transmit(&huart1, znak, 3, 100);
+			sprintf(znak, "2");
 			HAL_UART_Transmit_IT(&huart1, &znak, 1);
 			pin[pin_counter] = 2;
 
 			HAL_Delay(200);
 			pin_counter++;
 		} else if (gu8_KeyStatesArr[KEY_3] == KEY_PRESSED) {
-//				sprintf(znak, "3\r\n");
-			//		HAL_UART_Transmit(&huart1, znak, 3, 100);
-//				HAL_UART_Transmit_IT(&huart1, &znak, 1);
+			sprintf(znak, "3");
+			HAL_UART_Transmit_IT(&huart1, &znak, 1);
 			pin[pin_counter] = 3;
 			HAL_Delay(200);
 			pin_counter++;
-		} else if (gu8_KeyStatesArr[KEY_F1] == KEY_PRESSED) {
-
-			//		HAL_UART_Transmit(&huart1, znak, 3, 100);
-			HAL_UART_Transmit_IT(&huart1, &message, 4);
-			pin_counter = 0;
-			HAL_Delay(200);
-			memset(pin, 0, sizeof pin);
 		} else if (gu8_KeyStatesArr[KEY_4] == KEY_PRESSED) {
-
-			sprintf(message, "%d%d%d%d\r\n", correct[0], correct[1], correct[2],
-					correct[3]);
-			HAL_UART_Transmit_IT(&huart1, &message, 4);
-			pin_counter = 0;
+			sprintf(znak, "4");
+			HAL_UART_Transmit_IT(&huart1, &znak, 1);
 			HAL_Delay(200);
-			memset(pin, 0, sizeof pin);
-		} else if (pin_counter == 1) {
-//			HAL_GPIO_WritePin(GPIOG, LD3_Pin, GPIO_PIN_RESET);
-//			HAL_GPIO_WritePin(GPIOG, LD4_Pin, GPIO_PIN_SET);
+			pin_counter++;
+		} else if (gu8_KeyStatesArr[KEY_5] == KEY_PRESSED) {
+			sprintf(znak, "5");
+			HAL_UART_Transmit_IT(&huart1, &znak, 1);
+			HAL_Delay(200);
+			pin_counter++;
+		} else if (gu8_KeyStatesArr[KEY_6] == KEY_PRESSED) {
+			sprintf(znak, "6");
+			HAL_UART_Transmit_IT(&huart1, &znak, 1);
+			HAL_Delay(200);
+			pin_counter++;
+		} else if (gu8_KeyStatesArr[KEY_7] == KEY_PRESSED) {
+			sprintf(znak, "7");
+			HAL_UART_Transmit_IT(&huart1, &znak, 1);
+			HAL_Delay(200);
+			pin_counter++;
+		} else if (gu8_KeyStatesArr[KEY_8] == KEY_PRESSED) {
+			sprintf(znak, "8");
+			HAL_UART_Transmit_IT(&huart1, &znak, 1);
+			HAL_Delay(200);
+			pin_counter++;
+		} else if (gu8_KeyStatesArr[KEY_9] == KEY_PRESSED) {
+			sprintf(znak, "9");
+			HAL_UART_Transmit_IT(&huart1, &znak, 1);
+			HAL_Delay(200);
+			pin_counter++;
 		}
 	}
 
@@ -335,8 +344,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			} else if (strchr(received, 'f') != NULL) {
 				HAL_GPIO_WritePin(GPIOG, LD3_Pin, GPIO_PIN_RESET);
 				dl_kom = sprintf(komunikat, "GREEN LIGHT");
-			}
-			else if (strchr(received, 'd') != NULL) {
+			} else if (strchr(received, 'd') != NULL) {
 				switch (received[1]) {
 				case 48:
 					__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
@@ -360,11 +368,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 				HAL_GPIO_TogglePin(GPIOG, LD3_Pin);
 				dl_kom = sprintf("%d", &received[1]);
 			}
-		}
-		else{
+		} else {
 			__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
 		}
-			HAL_UART_Receive_IT(&huart1, &received, 2);
+		HAL_UART_Receive_IT(&huart1, &received, 2);
 //		HAL_UART_Transmit_IT(&huart1, &komunikat, dl_kom);
 
 	}
@@ -375,6 +382,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		HAL_GPIO_TogglePin(GPIOG, LD3_Pin);
 		__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
 		memset(pin, 0, sizeof pin);
+		ALLOW_FLAG = 0;
+	}
+	if (GPIO_Pin == PIR_Pin){
+		if(ALLOW_FLAG == 0){
+			HAL_GPIO_TogglePin(GPIOG, RED_Pin);
+		}
 	}
 }
 //void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {

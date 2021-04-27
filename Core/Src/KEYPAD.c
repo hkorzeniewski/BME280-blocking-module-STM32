@@ -406,3 +406,4 @@ void KEYPAD_Scan(uint16_t au16_Instance)
 		HAL_GPIO_WritePin(KEYPAD_CfgParam[au16_Instance].COL_GPIO[i], KEYPAD_CfgParam[au16_Instance].COL_PIN[i], 1);
 	}
 }
+
