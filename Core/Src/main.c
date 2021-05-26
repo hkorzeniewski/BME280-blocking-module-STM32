@@ -37,6 +37,7 @@
 #include "KEYPAD_cfg.h"
 #include <stdio.h>
 #include <string.h>
+#include "STEPPER.h"
 //#include "lcd.h"
 /* USER CODE END Includes */
 
@@ -47,22 +48,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define KEY_1       0
-#define KEY_2       1
-#define KEY_3       2
-#define KEY_F1      3
-#define KEY_4       4
-#define KEY_5       5
-#define KEY_6       6
-#define KEY_F2      7
-#define KEY_7       8
-#define KEY_8       9
-#define KEY_9       10
-#define KEY_F3      11
-#define KEY_A       12
-#define KEY_0       13
-#define KEY_H       14
-#define KEY_F4      15
+#define STEPPER_MOTOR1   0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -73,18 +59,17 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t pres, temp, humi, alti;
 uint16_t dl_kom;
 uint8_t received[2];
 uint8_t komunikat[50];
-uint16_t correct[4] = { 1, 1, 1, 1 };
+uint16_t correct[4] = {1, 1, 1, 1};
 uint8_t znak[1];
 uint16_t pin[4];
 uint8_t pin_counter = 0;
 uint16_t message[6];
 int ALLOW_FLAG = 0;
 BME280_ReadedData_t BME280_Data;
-//struct lcd_disp disp;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,7 +93,6 @@ uint8_t SysTicks = 0;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -117,48 +101,43 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_I2C3_Init();
-  MX_USART2_UART_Init();
   MX_TIM7_Init();
   MX_USART1_UART_Init();
   MX_TIM10_Init();
   MX_I2C1_Init();
+  MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
-
 	BME280_Initial(BME280_STANDBY_MS_1000, BME280_FILTER_OFF,
 			BME280_TEMP_OVERSAMPLING_X1, BME280_PRES_OVERSAMPLING_X1,
 			BME280_HUM_OVERSAMPLING_X1, BME280_MODE_NORMAL);
 	HAL_TIM_Base_Start_IT(&htim7);
-//	disp.addr = (0x3F << 1);
-//	disp.bl = true;
-//	lcd_init(&disp);
-//	sprintf((char *)disp.f_line, "To 1. linia");
-//	sprintf((char *)disp.s_line, "a to druga linia");
-//	lcd_display(&disp);
 	HAL_UART_Receive_IT(&huart1, &received, 2);
 	HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
 	KEYPAD_Init(0, gu8_KeyStatesArr);
+	STEPPERS_Init_TMR(&htim11);
+	STEPPER_SetSpeed(STEPPER_MOTOR1, 28);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	//sprawdzam czy jest wpisany poprawny PIN
 	while (1) {
 		if (checkPin(correct, 4) == 1) {
 			HAL_GPIO_WritePin(GPIOG, LD3_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(GPIOG, LD4_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOG, RED_Pin, GPIO_PIN_RESET);
 			ALLOW_FLAG = 1;
 		} else if (checkPin(correct, 4) == 0) {
 			HAL_GPIO_WritePin(GPIOG, LD3_Pin, GPIO_PIN_RESET);
@@ -168,7 +147,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
 	}
   /* USER CODE END 3 */
 }
@@ -195,7 +173,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 72;
+  RCC_OscInitStruct.PLL.PLLN = 80;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -302,7 +280,6 @@ int checkPin(int a[], int n) {
 			HAL_UART_Transmit_IT(&huart1, &komunikat, dl_kom);
 		}
 
-//			HAL_Delay(200);
 		pin_counter = 0;
 		HAL_GPIO_TogglePin(GPIOG, LD4_Pin);
 		memset(pin, 0, sizeof pin);
@@ -311,8 +288,9 @@ int checkPin(int a[], int n) {
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if (htim->Instance == TIM7) {
-		if (ALLOW_FLAG == 1) {
+	if (ALLOW_FLAG == 1) {
+		if (htim->Instance == TIM7) {
+
 
 			BME280_Data.temp = BME280_ReadTemperature();
 			BME280_Data.pres = BME280_ReadPressure();
@@ -325,6 +303,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 					BME280_Data.alti);
 //		printf("T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f \r\n", BME280_Data.temp, BME280_Data.pres, BME280_Data.humi, BME280_Data.alti);
 			HAL_UART_Transmit_IT(&huart1, komunikat, dl_kom);
+		}
+
+		if(htim->Instance == TIM11){
+			STEPPER_TMR_OVF_ISR(&htim11);
 		}
 	}
 }
@@ -344,15 +326,24 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			} else if (strchr(received, 'f') != NULL) {
 				HAL_GPIO_WritePin(GPIOG, LD3_Pin, GPIO_PIN_RESET);
 				dl_kom = sprintf(komunikat, "GREEN LIGHT");
-			} else if (strchr(received, 'd') != NULL) {
-				switch (received[1]) {
+			}
+			  else if(strchr(received, 'u') != NULL)
+			{
+				STEPPER_Step_NonBlocking(STEPPER_MOTOR1, 1000, DIR_CCW);
+
+			}
+			  else if(strchr(received, 'y') != NULL)
+			{
+				STEPPER_Step_NonBlocking(STEPPER_MOTOR1, 1000, DIR_CW);
+
+			}
+			  else if (strchr(received, 'd') != NULL) {
+			switch (received[1]) {
 				case 48:
 					__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
-
 					break;
 				case 49:
 					__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 50);
-
 					break;
 				case 50:
 					__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 100);
@@ -383,36 +374,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
 		memset(pin, 0, sizeof pin);
 		ALLOW_FLAG = 0;
+
 	}
 	if (GPIO_Pin == PIR_Pin){
 		if(ALLOW_FLAG == 0){
 			HAL_GPIO_TogglePin(GPIOG, RED_Pin);
 		}
+
 	}
 }
-//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-//	if (GPIO_Pin == GPIO_PIN_0) {
-//		HAL_GPIO_TogglePin(GPIOG, LD3_Pin);
-////		BME280_mode_E sensMode = BME280_MODE_FORCED_1;
-////		BME280_Initial(BME280_STANDBY_MS_1000, BME280_FILTER_OFF, BME280_TEMP_OVERSAMPLING_X1, BME280_PRES_OVERSAMPLING_X1, BME280_HUM_OVERSAMPLING_X1, BME280_MODE_FORCED_1);
-//
-//		BME280_Data.temp = BME280_ReadTemperature();
-//		BME280_Data.pres = BME280_ReadPressure();
-//		BME280_Data.humi = BME280_ReadHumidity();
-//		BME280_Data.alti = BME280_ReadAltitude(kSEA_LEVEL_PRESURE_PA);
-//
-//		dl_kom = sprintf(komunikat, "T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f\r\n",
-//				BME280_Data.temp, BME280_Data.pres, BME280_Data.humi,
-//				BME280_Data.alti);
-////		printf("T: %0.2f, P: %0.2f, H: %0.2f, A: %0.2f \r\n", BME280_Data.temp,
-////				BME280_Data.pres, BME280_Data.humi, BME280_Data.alti);
-////		HAL_UART_Transmit_IT(&huart1, komunikat, dl_kom);
-//		HAL_UART_Transmit(&huart1, komunikat, dl_kom, 100);
-//
-////		sprintf((char*) disp.f_line, "Siemano");
-////		lcd_display(&disp);
-//	}
-//}
+
 
 /* USER CODE END 4 */
 

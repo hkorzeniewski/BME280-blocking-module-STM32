@@ -1,4 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
+Core/Src/DWT_Delay.o: ../Core/Src/DWT_Delay.c ../Core/Inc/DWT_Delay.h \
+ ../Core/Inc/stm32f4xx_it.h ../Core/Inc/gpio.h ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -28,12 +29,13 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/dma.h ../Core/Inc/main.h ../Core/Inc/i2c.h ../Core/Inc/tim.h \
- ../Core/Inc/usart.h ../Core/Inc/gpio.h ../Core/Inc/stm_bme_280.h \
- ../Core/Inc/KEYPAD.h ../Core/Inc/stm32f4xx_it.h ../Core/Inc/gpio.h \
- ../Core/Inc/KEYPAD_cfg.h ../Core/Inc/KEYPAD.h ../Core/Inc/STEPPER.h \
- ../Core/Inc/tim.h
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+
+../Core/Inc/DWT_Delay.h:
+
+../Core/Inc/stm32f4xx_it.h:
+
+../Core/Inc/gpio.h:
 
 ../Core/Inc/main.h:
 
@@ -96,31 +98,3 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
-
-../Core/Inc/dma.h:
-
-../Core/Inc/main.h:
-
-../Core/Inc/i2c.h:
-
-../Core/Inc/tim.h:
-
-../Core/Inc/usart.h:
-
-../Core/Inc/gpio.h:
-
-../Core/Inc/stm_bme_280.h:
-
-../Core/Inc/KEYPAD.h:
-
-../Core/Inc/stm32f4xx_it.h:
-
-../Core/Inc/gpio.h:
-
-../Core/Inc/KEYPAD_cfg.h:
-
-../Core/Inc/KEYPAD.h:
-
-../Core/Inc/STEPPER.h:
-
-../Core/Inc/tim.h:

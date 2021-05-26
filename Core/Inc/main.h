@@ -131,10 +131,6 @@ void Error_Handler(void);
 #define A10_GPIO_Port GPIOG
 #define A11_Pin GPIO_PIN_1
 #define A11_GPIO_Port GPIOG
-#define D4_Pin GPIO_PIN_7
-#define D4_GPIO_Port GPIOE
-#define D5_Pin GPIO_PIN_8
-#define D5_GPIO_Port GPIOE
 #define D6_Pin GPIO_PIN_9
 #define D6_GPIO_Port GPIOE
 #define D7_Pin GPIO_PIN_10
@@ -217,8 +213,6 @@ void Error_Handler(void);
 #define D2_GPIO_Port GPIOD
 #define D3_Pin GPIO_PIN_1
 #define D3_GPIO_Port GPIOD
-#define G7_Pin GPIO_PIN_3
-#define G7_GPIO_Port GPIOD
 #define G3_Pin GPIO_PIN_10
 #define G3_GPIO_Port GPIOG
 #define B3_Pin GPIO_PIN_11
@@ -233,10 +227,6 @@ void Error_Handler(void);
 #define SDNCAS_GPIO_Port GPIOG
 #define SDCKE1_Pin GPIO_PIN_5
 #define SDCKE1_GPIO_Port GPIOB
-#define NBL0_Pin GPIO_PIN_0
-#define NBL0_GPIO_Port GPIOE
-#define NBL1_Pin GPIO_PIN_1
-#define NBL1_GPIO_Port GPIOE
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
