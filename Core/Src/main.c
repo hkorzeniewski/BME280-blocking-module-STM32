@@ -37,6 +37,7 @@
 #include "KEYPAD_cfg.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "STEPPER.h"
 //#include "lcd.h"
 /* USER CODE END Includes */
@@ -69,6 +70,10 @@ uint8_t pin_counter = 0;
 uint16_t message[6];
 int ALLOW_FLAG = 0;
 BME280_ReadedData_t BME280_Data;
+uint16_t actual_state = 0;
+uint16_t new_state = 0;
+uint16_t rotation = 0;
+uint8_t Stepper_Dir = DIR_CW;
 
 /* USER CODE END PV */
 
@@ -78,6 +83,7 @@ void SystemClock_Config(void);
 void SysTick_CallBack(void);
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 int checkPin(int a[], int n);
+void calculateStep(int a, int b);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -287,6 +293,7 @@ int checkPin(int a[], int n) {
 	}
 }
 
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (ALLOW_FLAG == 1) {
 		if (htim->Instance == TIM7) {
@@ -311,6 +318,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	}
 }
 
+void calculateStep(int actual, int new){
+	rotation = abs(actual-new);
+	if( actual < new ){
+		Stepper_Dir = DIR_CW;
+//		STEPPER_Step_NonBlocking(STEPPER_MOTOR1, rotation, Stepper_Dir);
+	}
+	else{
+		Stepper_Dir = DIR_CCW;
+
+	}
+	STEPPER_Step_NonBlocking(STEPPER_MOTOR1, rotation, Stepper_Dir);
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART1) {
 		if (ALLOW_FLAG == 1) {
@@ -329,16 +349,37 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			}
 			  else if(strchr(received, 'u') != NULL)
 			{
-				STEPPER_Step_NonBlocking(STEPPER_MOTOR1, 1000, DIR_CCW);
-
-			}
-			  else if(strchr(received, 'y') != NULL)
-			{
-				STEPPER_Step_NonBlocking(STEPPER_MOTOR1, 1000, DIR_CW);
+				switch(received[1]){
+				case 48:
+					new_state = 0;
+					calculateStep(actual_state, new_state);
+					actual_state = new_state;
+					break;
+				case 49:
+					new_state = 1000;
+					calculateStep(actual_state, new_state);
+					actual_state = new_state;
+					break;
+				case 50:
+					new_state = 2000;
+					calculateStep(actual_state, new_state);
+					actual_state = new_state;
+					break;
+				case 51:
+					new_state = 3000;
+					calculateStep(actual_state, new_state);
+					actual_state = new_state;
+					break;
+				case 52:
+					new_state = 4000;
+					calculateStep(actual_state, new_state);
+					actual_state = new_state;
+					break;
+				}
 
 			}
 			  else if (strchr(received, 'd') != NULL) {
-			switch (received[1]) {
+			  switch (received[1]) {
 				case 48:
 					__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, 0);
 					break;
